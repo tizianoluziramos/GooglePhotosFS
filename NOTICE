@@ -1,0 +1,9 @@
+GooglePhotosFS implements the Google Photos mobile protocol and the behavior
+of rclone-gphotos-oot (akhil-rana, 1ee56f51), with the native WinFsp mounting
+pattern of TelegramFS (tizianoluziramos, 9e76dfa1). Their repositories are
+the functional references. This distribution uses Go, go-winfsp, SQLite,
+and the additional dependencies identified in go.mod and licenses/.
+
+WinFsp - Windows File System Proxy, Copyright (C) Bill Zissimopoulos.
+The WinFsp driver is installed separately.
+https://github.com/winfsp/winfsp

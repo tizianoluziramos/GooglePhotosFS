@@ -1,0 +1,16 @@
+[filesystem]
+mount_point = "P:"
+root = ""
+read_only = false
+
+[google_photos]
+auth_data = ""
+cache_db_path = ""
+device_model = ""
+device_make = ""
+unlimited_upload = false
+list_mode = "flat"
+apk_version = 49029607
+android_api = 35
+download_cache = false
+encoding = "Slash,Dot,CrLf,InvalidUtf8"
