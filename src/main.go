@@ -17,14 +17,14 @@ const version = "0.2.0"
 
 func help() {
 	fmt.Print(`GooglePhotosFS ` + version + `
-  config [manual|auto|existing|path]   Configurar cuenta u obtener la ruta TOML
-  mount [P:] | unmount [P:]            Montar o desmontar con WinFsp en Windows
-  sync | about                        Actualizar índice o consultar cuota
-  ls [directorio] | stat archivo      Listar o consultar un elemento
-  metadata archivo | hash archivo    Leer metadatos o SHA-1
-  set-description archivo texto      Cambiar descripción ("" para borrar)
-  get remoto local | put local remoto Transferir un medio
-  rm archivo                          Quitar ruta o enviar el medio a la papelera
+  config [manual|auto|existing|path]   Configure the account or show the TOML file path
+  mount [P:] | unmount [P:]            Mount or unmount with WinFsp on Windows
+  sync | about                         Update the index or show storage quota
+  ls [directory] | stat file           List a directory or show item details
+  metadata file | hash file            Show metadata or the SHA-1 hash
+  set-description file text            Change the description (use "" to clear it)
+  get remote local | put local remote  Download or upload a media item
+  rm file                              Remove a path or move the media item to the trash
 `)
 }
 
@@ -36,10 +36,10 @@ func printJSON(value any) error {
 
 func transferOut(ctx context.Context, s *Store, node Node, target string) error {
 	if node.Dir {
-		return errors.New("la ruta es un directorio")
+		return errors.New("the path is a directory")
 	}
 	if node.Media.Key == "" {
-		return errors.New("el medio no tiene clave de descarga")
+		return errors.New("the media item has no download key")
 	}
 	var body io.Reader
 	var err error
@@ -87,7 +87,7 @@ func transferOut(ctx context.Context, s *Store, node Node, target string) error 
 
 func validArgumentCount(args []string, min, max int) error {
 	if len(args) < min || len(args) > max {
-		return fmt.Errorf("argumentos inválidos para %s. Usá --help", args[0])
+		return fmt.Errorf("invalid arguments for %s. Use --help", args[0])
 	}
 	return nil
 }
@@ -124,7 +124,7 @@ func run(ctx context.Context, args []string) error {
 	}
 	count, ok := counts[cmd]
 	if !ok {
-		return fmt.Errorf("comando desconocido: %q", cmd)
+		return fmt.Errorf("unknown command: %q", cmd)
 	}
 	if err = validArgumentCount(args, count[0], count[1]); err != nil {
 		return err
@@ -157,7 +157,7 @@ func run(ctx context.Context, args []string) error {
 	if cmd == "put" {
 		remote = cleanVirtual(strings.ReplaceAll(args[2], "\\", "/"))
 		if remote == "" {
-			return errors.New("indicá un nombre de archivo remoto")
+			return errors.New("specify a remote filename")
 		}
 		f, err := os.Open(args[1])
 		if err != nil {
@@ -183,7 +183,7 @@ func run(ctx context.Context, args []string) error {
 	}
 	if cmd == "ls" {
 		if !node.Dir {
-			return errors.New("la ruta no es un directorio")
+			return errors.New("the path is not a directory")
 		}
 		for _, child := range s.catalog.Load().children[fold(node.Path)] {
 			suffix := ""

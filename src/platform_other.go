@@ -9,5 +9,5 @@ import (
 
 func nativeNames() bool { return false }
 func platformMount(context.Context, Config, []string) error {
-	return errors.New("el montaje nativo requiere Windows x64 con WinFsp Core")
+	return errors.New("native mounting requires Windows x64 with WinFsp Core")
 }

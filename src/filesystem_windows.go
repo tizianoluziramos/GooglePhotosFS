@@ -84,12 +84,12 @@ func newVolume(ctx context.Context, s *Store, letter string) (*Volume, error) {
 func (v *Volume) restorePending() {
 	stages, err := openPending(v.staging)
 	if err != nil {
-		log.Printf("Leer cargas pendientes: %v", err)
+		log.Printf("Read pending uploads: %v", err)
 	}
 	for _, p := range stages {
 		key := fold(p.name)
 		if v.files[key] != nil {
-			log.Printf("Carga pendiente en conflicto: %s", p.file.Name())
+			log.Printf("Conflicting pending upload: %s", p.file.Name())
 			p.file.Close()
 			continue
 		}
@@ -824,7 +824,7 @@ func (v *Volume) retryPending(ctx context.Context) {
 			defer func() { <-limit }()
 			if err := v.commit(ctx, p); err != nil {
 				if ctx.Err() == nil {
-					log.Printf("Carga pendiente en %s: %v", p.file.Name(), err)
+					log.Printf("Pending upload at %s: %v", p.file.Name(), err)
 				}
 				return
 			}
@@ -936,7 +936,7 @@ func (v *Volume) finish(h *fileHandle) {
 	}
 	p.mu.Unlock()
 	if err != nil {
-		log.Printf("Guardar carga pendiente %s: %v", p.file.Name(), err)
+		log.Printf("Save pending upload %s: %v", p.file.Name(), err)
 		return
 	}
 	if needsUpload {
@@ -967,7 +967,7 @@ func (v *Volume) Cleanup(_ *wf.FileSystemRef, id uintptr, _ string, flags uint32
 		}
 		p.mu.Unlock()
 		if err != nil {
-			log.Printf("Cancelar carga %s: %v", p.file.Name(), err)
+			log.Printf("Cancel upload %s: %v", p.file.Name(), err)
 			return
 		}
 		v.retire(p)
@@ -982,7 +982,7 @@ func (v *Volume) Cleanup(_ *wf.FileSystemRef, id uintptr, _ string, flags uint32
 	ctx, cancel := context.WithTimeout(v.ctx, 2*time.Minute)
 	defer cancel()
 	if err := v.store.mutate(ctx, h.node, nil); err != nil {
-		log.Printf("Eliminar %q: %v", h.node.Path, err)
+		log.Printf("Delete %q: %v", h.node.Path, err)
 	}
 }
 
@@ -1143,7 +1143,7 @@ func (v *Volume) shutdown() error {
 		p.mu.Lock()
 		if p.dirty && !p.deleted && p.writers == 0 {
 			if err := p.seal(); err != nil {
-				log.Printf("Guardar carga pendiente %s: %v", p.file.Name(), err)
+				log.Printf("Save pending upload %s: %v", p.file.Name(), err)
 			}
 		}
 		p.file.Close()
@@ -1155,7 +1155,7 @@ func (v *Volume) shutdown() error {
 		p.mu.Unlock()
 	}
 	if len(pending) != 0 {
-		return fmt.Errorf("cargas pendientes conservadas en %s", strings.Join(pending, ", "))
+		return fmt.Errorf("pending uploads retained in %s", strings.Join(pending, ", "))
 	}
 	return nil
 }

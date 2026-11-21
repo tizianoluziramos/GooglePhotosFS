@@ -22,9 +22,9 @@ import (
 )
 
 var (
-	errVirtualDirectory = errors.New("no se puede borrar un directorio virtual")
-	errNoDedup          = errors.New("el medio no tiene clave de deduplicación")
-	errReadOnly         = errors.New("unidad de solo lectura")
+	errVirtualDirectory = errors.New("cannot delete a virtual directory")
+	errNoDedup          = errors.New("the media item has no deduplication key")
+	errReadOnly         = errors.New("drive is read-only")
 )
 
 type Store struct {
@@ -115,10 +115,10 @@ func (s *Store) syncPages(ctx context.Context, force bool) error {
 		}
 		update, err := s.photos.library(ctx, base, cur.page, !cur.complete)
 		if err != nil {
-			return fmt.Errorf("sincronizar biblioteca: %w", err)
+			return fmt.Errorf("sync library: %w", err)
 		}
 		if update.Next != "" && update.Next == cur.page {
-			return errors.New("Google devolvió el mismo cursor de página")
+			return errors.New("Google returned the same page cursor")
 		}
 		next := cur
 		if update.State != "" && cur.page == "" {
@@ -180,7 +180,7 @@ func (s *Store) lockMutation(ctx context.Context) error {
 		return err
 	}
 	if !locked {
-		return fmt.Errorf("bloqueo del índice: %w", ctx.Err())
+		return fmt.Errorf("lock index: %w", ctx.Err())
 	}
 	return nil
 }
@@ -255,7 +255,7 @@ func (s *Store) put(ctx context.Context, src *os.File, name, dir string) (Media,
 			if syncErr != nil {
 				return Media{}, syncErr
 			}
-			return Media{}, errors.New("Google encontró el duplicado, pero aún no publicó sus metadatos")
+			return Media{}, errors.New("Google found the duplicate but has not published its metadata yet")
 		}
 		item = Media{Key: key, Dedup: dedup, Name: remoteName, Size: info.Size(), SHA1: hex.EncodeToString(raw), Canonical: true}
 	}

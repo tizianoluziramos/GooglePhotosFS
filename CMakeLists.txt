@@ -17,5 +17,5 @@ add_custom_command(
 
 add_custom_target(GooglePhotosFSWindows ALL DEPENDS "${EXECUTABLE_PATH}")
 install(PROGRAMS "${EXECUTABLE_PATH}" DESTINATION .)
-install(FILES README.md VALIDACION.md NOTICE googlephotosfs.toml DESTINATION .)
+install(FILES README.md NOTICE googlephotosfs.toml DESTINATION .)
 install(DIRECTORY licenses DESTINATION .)

@@ -21,7 +21,7 @@ type cursor struct {
 	last, revision, catalogRevision int64
 }
 
-var errCacheChanged = errors.New("el índice cambió durante la sincronización")
+var errCacheChanged = errors.New("the index changed during synchronization")
 
 func openCache(filename, account string) (*Cache, error) {
 	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
@@ -113,7 +113,7 @@ func (c *Cache) init(account string) error {
 		return err
 	}
 	if stored != "" && stored != account {
-		return errors.New("este índice pertenece a otra cuenta de Google Photos")
+		return errors.New("this index belongs to another Google Photos account")
 	}
 	if stored == "" {
 		if _, err = tx.Exec("UPDATE state SET account=? WHERE id=1", account); err != nil {
@@ -222,7 +222,7 @@ func (c *Cache) saveMedia(ctx context.Context, item Media, trash bool) error {
 		}
 	}
 	if err != nil {
-		return fmt.Errorf("guardar índice: %w", err)
+		return fmt.Errorf("save index: %w", err)
 	}
 	if _, err = tx.ExecContext(ctx, "UPDATE state SET revision=revision+1,catalog_revision=catalog_revision+1,last_sync_time=0 WHERE id=1"); err != nil {
 		return err

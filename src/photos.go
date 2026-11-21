@@ -63,7 +63,7 @@ func transport() *http.Transport {
 func newPhotos(options PhotoConfig) (*Photos, error) {
 	credentials, err := url.ParseQuery(options.AuthData)
 	if err != nil || credentials.Get("androidId") == "" || credentials.Get("Token") == "" {
-		return nil, errors.New("auth_data inválido. Ejecutá googlephotosfs config")
+		return nil, errors.New("invalid auth_data. Run googlephotosfs config")
 	}
 	options.defaults()
 	if options.UnlimitedUpload {
@@ -103,7 +103,7 @@ func exchange(ctx context.Context, token string) (string, error) {
 func exchangeCookie(ctx context.Context, client *http.Client, token string) (string, error) {
 	token = strings.TrimPrefix(strings.TrimSpace(token), "oauth_token=")
 	if !strings.HasPrefix(token, "oauth2_4/") {
-		return "", errors.New("oauth_token debe empezar con oauth2_4/")
+		return "", errors.New("oauth_token must start with oauth2_4/")
 	}
 	var id [8]byte
 	if _, err := rand.Read(id[:]); err != nil {
@@ -138,10 +138,10 @@ func exchangeCookie(ctx context.Context, client *http.Client, token string) (str
 	}
 	fields := formResponse(data)
 	if fields["Error"] != "" {
-		return "", fmt.Errorf("Google rechazó el inicio de sesión: %s", fields["Error"])
+		return "", fmt.Errorf("Google rejected the sign-in: %s", fields["Error"])
 	}
 	if fields["Token"] == "" || fields["Email"] == "" {
-		return "", errors.New("respuesta de autenticación sin cuenta o token")
+		return "", errors.New("authentication response is missing an account or token")
 	}
 	return (url.Values{
 		"androidId": {androidID}, "app": {photosApp}, "callerPkg": {photosApp}, "callerSig": {photosSignature},
@@ -243,7 +243,7 @@ func consume(resp *http.Response) ([]byte, error) {
 	const limit = 128 << 20
 	raw, err := io.ReadAll(io.LimitReader(body, limit+1))
 	if len(raw) > limit {
-		return nil, errors.New("respuesta protobuf demasiado grande")
+		return nil, errors.New("protobuf response is too large")
 	}
 	return raw, err
 }
@@ -264,7 +264,7 @@ func (p *Photos) bearer(ctx context.Context) (string, error) {
 	value := form.Encode()
 	resp, err := p.request(ctx, http.MethodPost, authRefresh, func() io.Reader { return strings.NewReader(value) }, int64(len(value)), headers, true)
 	if err != nil {
-		return "", fmt.Errorf("autenticación móvil: %w", err)
+		return "", fmt.Errorf("mobile authentication: %w", err)
 	}
 	raw, err := consume(resp)
 	if err != nil {
@@ -275,7 +275,7 @@ func (p *Photos) bearer(ctx context.Context) (string, error) {
 		if fields["Error"] != "" {
 			return "", fmt.Errorf("Google Auth: %s", fields["Error"])
 		}
-		return "", errors.New("respuesta de Google Auth sin token")
+		return "", errors.New("Google Auth response is missing a token")
 	}
 	p.token = fields["Auth"]
 	p.expiry, _ = strconv.ParseInt(fields["Expiry"], 10, 64)
@@ -349,7 +349,7 @@ func (p *Photos) upload(ctx context.Context, reader io.Reader, size int64, name 
 	_, _ = io.Copy(io.Discard, io.LimitReader(res.Body, 4096))
 	res.Body.Close()
 	if session == "" {
-		return "", errors.New("Google no devolvió una sesión de carga")
+		return "", errors.New("Google did not return an upload session")
 	}
 	headers, err = p.headers(ctx)
 	if err != nil {
@@ -374,7 +374,7 @@ func (p *Photos) upload(ctx context.Context, reader io.Reader, size int64, name 
 	if key := commit.sub(1, 3).str(1); key != "" {
 		return key, nil
 	}
-	return "", errors.New("Google rechazó la carga sin devolver una clave")
+	return "", errors.New("Google rejected the upload without returning a key")
 }
 
 func (p *Photos) caption(ctx context.Context, key, value string) error {
@@ -405,7 +405,7 @@ func (p *Photos) download(ctx context.Context, key string) (io.ReadCloser, error
 	}
 	u, err := url.Parse(address)
 	if err != nil || u.Scheme != "https" || u.User != nil {
-		return nil, errors.New("Google no devolvió una URL HTTPS de descarga")
+		return nil, errors.New("Google did not return an HTTPS download URL")
 	}
 	host := strings.ToLower(u.Hostname())
 	googleHost := host == "google.com" || strings.HasSuffix(host, ".google.com") ||
@@ -413,7 +413,7 @@ func (p *Photos) download(ctx context.Context, key string) (io.ReadCloser, error
 		host == "googleusercontent.com" || strings.HasSuffix(host, ".googleusercontent.com") ||
 		host == "gstatic.com" || strings.HasSuffix(host, ".gstatic.com")
 	if !googleHost {
-		return nil, errors.New("Google devolvió un servidor de descarga no reconocido")
+		return nil, errors.New("Google returned an unrecognized download server")
 	}
 	headers, err := p.headers(ctx)
 	if err != nil {
@@ -444,7 +444,7 @@ func (p *Photos) usage(ctx context.Context) (Usage, error) {
 		return Usage{}, err
 	}
 	if reply.sub(1) == nil {
-		return Usage{}, errors.New("respuesta de cuota inválida")
+		return Usage{}, errors.New("invalid quota response")
 	}
 	acc := reply.sub(1, 4)
 	var usage Usage

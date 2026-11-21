@@ -114,7 +114,7 @@ func readPending(record string) (*stage, error) {
 		return nil, err
 	}
 	if !info.Mode().IsRegular() || info.Size() > 256<<10 {
-		return nil, errors.New("registro de carga demasiado grande")
+		return nil, errors.New("upload record is too large")
 	}
 	data, err := os.ReadFile(record)
 	if err != nil {
@@ -126,7 +126,7 @@ func readPending(record string) (*stage, error) {
 	}
 	if saved.Path == "" || cleanVirtual(saved.Path) != saved.Path || cleanVirtual(saved.Dir) != saved.Dir ||
 		strings.ContainsAny(saved.Path, "\x00\\:") || strings.ContainsRune(saved.Dir, 0) || saved.Size < 0 {
-		return nil, errors.New("destino de carga inválido")
+		return nil, errors.New("invalid upload destination")
 	}
 	filename := strings.TrimSuffix(record, ".json")
 	info, err = os.Lstat(filename)
@@ -134,7 +134,7 @@ func readPending(record string) (*stage, error) {
 		return nil, err
 	}
 	if !info.Mode().IsRegular() || info.Size() != saved.Size {
-		return nil, errors.New("tamaño inesperado de los datos de carga")
+		return nil, errors.New("unexpected upload data size")
 	}
 	f, err := os.OpenFile(filename, os.O_RDWR, 0600)
 	if err != nil {

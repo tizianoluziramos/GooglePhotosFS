@@ -46,7 +46,7 @@ func mountLogPath(cfg Config, letter string) string {
 
 func platformMount(ctx context.Context, cfg Config, args []string) error {
 	if len(args) > 2 {
-		return fmt.Errorf("uso: googlephotosfs %s [P:]", args[0])
+		return fmt.Errorf("usage: googlephotosfs %s [P:]", args[0])
 	}
 	letter := cfg.Filesystem.MountPoint
 	if len(args) == 2 {
@@ -64,7 +64,7 @@ func platformMount(ctx context.Context, cfg Config, args []string) error {
 		}
 		h, err := windows.OpenEvent(windows.EVENT_MODIFY_STATE, false, name)
 		if err != nil {
-			return fmt.Errorf("localizar unidad %s: %w", letter, err)
+			return fmt.Errorf("locate drive %s: %w", letter, err)
 		}
 		defer windows.CloseHandle(h)
 		name, err = eventName(letter, "done")
@@ -84,9 +84,9 @@ func platformMount(ctx context.Context, cfg Config, args []string) error {
 			return err
 		}
 		if result != windows.WAIT_OBJECT_0 {
-			return errors.New("el desmontaje sigue en curso")
+			return errors.New("unmounting is still in progress")
 		}
-		fmt.Println("Unidad desmontada " + letter)
+		fmt.Println("Unmounted drive " + letter)
 		return nil
 	case "__mount":
 		return mounted(ctx, cfg, letter)
@@ -96,7 +96,7 @@ func platformMount(ctx context.Context, cfg Config, args []string) error {
 	}
 	ready, err := createEvent(letter, "ready")
 	if err != nil {
-		return fmt.Errorf("preparar montaje de %s: %w", letter, err)
+		return fmt.Errorf("prepare to mount %s: %w", letter, err)
 	}
 	defer windows.CloseHandle(ready)
 	if err = os.MkdirAll(cfg.dir, 0700); err != nil {
@@ -119,14 +119,14 @@ func platformMount(ctx context.Context, cfg Config, args []string) error {
 	}
 	ended := make(chan error, 1)
 	go func() { ended <- run.Wait() }()
-	fmt.Println("Preparando el índice de Google Photos…")
+	fmt.Println("Preparing the Google Photos index...")
 	for {
 		state, err := windows.WaitForSingleObject(ready, 250)
 		if err != nil {
 			return err
 		}
 		if state == windows.WAIT_OBJECT_0 {
-			fmt.Println("Unidad montada " + letter)
+			fmt.Println("Mounted drive " + letter)
 			return nil
 		}
 		select {
@@ -138,7 +138,7 @@ func platformMount(ctx context.Context, cfg Config, args []string) error {
 			}
 			return ctx.Err()
 		case err := <-ended:
-			return fmt.Errorf("el montaje terminó antes de abrir la unidad (%v). Consultá %s", err, mountLogPath(cfg, letter))
+			return fmt.Errorf("the mount process exited before the drive opened (%v). See %s", err, mountLogPath(cfg, letter))
 		default:
 		}
 	}
@@ -149,7 +149,7 @@ func mounted(parent context.Context, cfg Config, letter string) error {
 	defer cancel()
 	stop, err := createEvent(letter, "stop")
 	if err != nil {
-		return fmt.Errorf("crear control de %s: %w", letter, err)
+		return fmt.Errorf("create mount control for %s: %w", letter, err)
 	}
 	defer windows.CloseHandle(stop)
 	done, err := createEvent(letter, "done")

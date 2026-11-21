@@ -46,7 +46,7 @@ func newDownloads(api *Photos, enabled bool) *Downloads {
 
 func (d *Downloads) open(item Media) (Downloader, error) {
 	if item.Key == "" {
-		return nil, errors.New("el medio no tiene clave de descarga")
+		return nil, errors.New("the media item has no download key")
 	}
 	if !d.enabled {
 		ctx, cancel := context.WithCancel(d.ctx)

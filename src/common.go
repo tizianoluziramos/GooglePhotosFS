@@ -147,7 +147,7 @@ func (cfg Config) runtime() Config {
 func driveLetter(arg string) (string, error) {
 	letter := strings.ToUpper(arg)
 	if len(letter) != 2 || letter[1] != ':' || letter[0] < 'A' || letter[0] > 'Z' {
-		return "", fmt.Errorf("letra de unidad inválida: %q", arg)
+		return "", fmt.Errorf("invalid drive letter: %q", arg)
 	}
 	return letter, nil
 }

@@ -37,7 +37,7 @@ func parseEncoding(s string) (nameEncoding, error) {
 		if !known {
 			n, err := strconv.ParseUint(tag, 0, 32)
 			if err != nil {
-				return 0, fmt.Errorf("encoding desconocido: %q", tag)
+				return 0, fmt.Errorf("unknown encoding: %q", tag)
 			}
 			mask |= nameEncoding(n)
 		}

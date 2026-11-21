@@ -32,15 +32,15 @@ func configure(ctx context.Context, cfg Config, args []string) error {
 	}
 	mode := ""
 	if len(args) > 1 {
-		return errors.New("uso: googlephotosfs config [manual|auto|existing|path]")
+		return errors.New("usage: googlephotosfs config [manual|auto|existing|path]")
 	}
 	if len(args) == 1 {
 		mode = args[0]
 	}
 
 	if mode == "" {
-		fmt.Println("1) Manual   2) Navegador automático (Linux)   3) auth_data existente")
-		answer, err := prompt("Método [1]: ")
+		fmt.Println("1) Manual   2) Automatic browser sign-in (Linux)   3) Existing auth_data")
+		answer, err := prompt("Method [1]: ")
 		if err != nil {
 			return err
 		}
@@ -52,11 +52,11 @@ func configure(ctx context.Context, cfg Config, args []string) error {
 		case "3":
 			mode = "existing"
 		default:
-			return errors.New("método de autenticación inválido")
+			return errors.New("invalid authentication method")
 		}
 	}
 	if mode != "manual" && mode != "auto" && mode != "existing" {
-		return errors.New("método de autenticación inválido")
+		return errors.New("invalid authentication method")
 	}
 	var secret string
 	var err error
@@ -64,8 +64,8 @@ func configure(ctx context.Context, cfg Config, args []string) error {
 		secret, err = browserLogin(ctx)
 	} else {
 		if mode == "manual" {
-			fmt.Println("Abrí " + embeddedSetup + ", iniciá sesión y aceptá.")
-			fmt.Println("En las herramientas de desarrollo, buscá la cookie oauth_token de accounts.google.com.")
+			fmt.Println("Open " + embeddedSetup + ", sign in, and accept.")
+			fmt.Println("In the developer tools, find the oauth_token cookie for accounts.google.com.")
 		}
 		secretName := "oauth_token"
 		if mode == "existing" {
@@ -91,7 +91,7 @@ func configure(ctx context.Context, cfg Config, args []string) error {
 			return err
 		}
 	}
-	unlimited, err := prompt(fmt.Sprintf("Perfil Pixel XL para cargas [%t]: ", cfg.Photos.UnlimitedUpload))
+	unlimited, err := prompt(fmt.Sprintf("Use the Pixel XL profile for uploads [%t]: ", cfg.Photos.UnlimitedUpload))
 	if err != nil {
 		return err
 	}
@@ -101,8 +101,8 @@ func configure(ctx context.Context, cfg Config, args []string) error {
 			return err
 		}
 	}
-	fmt.Println("Modos disponibles: flat, calendar, month, year, description_path")
-	list, err := prompt("Modo [" + cfg.Photos.ListMode + "]: ")
+	fmt.Println("Available list modes: flat, calendar, month, year, description_path")
+	list, err := prompt("Mode [" + cfg.Photos.ListMode + "]: ")
 	if err != nil {
 		return err
 	}
@@ -122,13 +122,13 @@ func configure(ctx context.Context, cfg Config, args []string) error {
 		return err
 	}
 	filename, _ := configPath()
-	fmt.Printf("Sesión verificada para %s. Configuración guardada en %s\n", api.credentials.Get("Email"), filename)
+	fmt.Printf("Sign-in verified for %s. Configuration saved to %s\n", api.credentials.Get("Email"), filename)
 	return nil
 }
 
 func browserLogin(ctx context.Context) (string, error) {
 	if runtime.GOOS != "linux" {
-		return "", errors.New("el modo automático requiere Linux. Usá el modo manual")
+		return "", errors.New("automatic mode requires Linux. Use manual mode")
 	}
 	var browser string
 	for _, program := range []string{"google-chrome", "google-chrome-beta", "chrome", "chromium", "chromium-browser", "brave", "brave-browser"} {
@@ -138,7 +138,7 @@ func browserLogin(ctx context.Context) (string, error) {
 		}
 	}
 	if browser == "" {
-		return "", errors.New("no se encontró Chrome, Chromium ni Brave")
+		return "", errors.New("could not find Chrome, Chromium, or Brave")
 	}
 	profile, err := os.MkdirTemp("", "googlephotosfs-auth-")
 	if err != nil {
@@ -153,7 +153,7 @@ func browserLogin(ctx context.Context) (string, error) {
 		return "", err
 	}
 	defer func() { _ = cmd.Process.Kill(); _ = cmd.Wait() }()
-	fmt.Println("Iniciá sesión en la ventana del navegador.")
+	fmt.Println("Sign in in the browser window.")
 	for ctx.Err() == nil {
 		raw, _ := os.ReadFile(filepath.Join(profile, "DevToolsActivePort"))
 		port, _, _ := strings.Cut(string(raw), "\n")
