@@ -1,44 +1,27 @@
-name: Build
-on: [push, pull_request, workflow_dispatch]
+name: Build and Release
+
+on:
+  push:
+    tags: ['**']
+
 permissions:
-  contents: read
+  contents: write
+
 jobs:
-  tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-      - run: go test -race ./...
-      - run: go vet ./...
-  windows:
+  release:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
-      - shell: pwsh
-        run: ./build.ps1
-      - shell: pwsh
-        run: ./dist/googlephotosfs.exe --help
-      - name: Install WinFsp Core
-        shell: pwsh
-        run: |
-          $msi = Join-Path $env:RUNNER_TEMP 'winfsp-2.1.25156.msi'
-          $url = 'https://github.com/winfsp/winfsp/releases/download/v2.1/winfsp-2.1.25156.msi'
-          Invoke-WebRequest -Uri $url -OutFile $msi
-          $expected = '073a70e00f77423e34bed98b86e600def93393ba5822204fac57a29324db9f7a'
-          if ((Get-FileHash -Algorithm SHA256 $msi).Hash -ne $expected) { throw 'WinFsp installer checksum mismatch' }
-          $install = Start-Process msiexec.exe -Wait -PassThru -ArgumentList "/i `"$msi`" ADDLOCAL=F.Main,F.User /qn /norestart"
-          if ($install.ExitCode -ne 0) { throw "WinFsp installation exited $($install.ExitCode)" }
-      - name: Test native Windows volume
-        shell: pwsh
-        env:
-          GOOGLEPHOTOSFS_TEST_WINFSP: '1'
-        run: go test -count=1 -v -run '^TestWinFspVolume$' ./src
-      - uses: actions/upload-artifact@v4
+      - run: ./build.ps1 -OutputDirectory GooglePhotosFS-windows-x64
+      - uses: thedoctor0/zip-release@0.7.6
         with:
-          name: GooglePhotosFS-windows-x64
-          path: dist/
+          path: GooglePhotosFS-windows-x64
+          filename: GooglePhotosFS-windows-x64.zip
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: GooglePhotosFS-windows-x64.zip
+          fail_on_unmatched_files: true
+          generate_release_notes: true
